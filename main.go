@@ -14,7 +14,7 @@ import (
 
 var sched scheduler.Scheduler
 
-// smsRecieve handlers listens to incoming sms messages from the twilo service
+// smsRecieve handlers listens to incoming sms messages from the twilio service
 func smsRecieve(w http.ResponseWriter, r *http.Request) {
 	sender := r.FormValue("From")
 	body := r.FormValue("Body")
@@ -40,6 +40,14 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// fallback handler for when there is an error from twilio sms service
+func fallback(w http.ResponseWriter, r *http.Request) {
+	errCode := r.FormValue("ErrorCode")
+	errUrl := r.FormValue("ErrorUrl")
+
+	fmt.Printf("Twilio Error code %s: %s\n", errCode, errUrl)
+}
+
 // addReminder creates a cron job to send a text
 func addReminder(number, message string, seconds int) {
 	if _, err := sched.RunAfter(time.Duration(seconds)*time.Second, sendMessage, message, number); err != nil {
@@ -50,6 +58,7 @@ func addReminder(number, message string, seconds int) {
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/sms/recieve", smsRecieve)
+	r.HandleFunc("/sms/fallback", fallback)
 
 	// Setup storage for scheduler
 	storage := storage.NewSqlite3Storage(

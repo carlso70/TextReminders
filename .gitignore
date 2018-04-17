@@ -13,3 +13,8 @@
 
 # db files
 *.db
+
+# Build products `go build`
+text-reminder
+textReminders
+TextReminders

@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -48,6 +49,7 @@ func sendHelp(numberTo string, w http.ResponseWriter) {
 
 // sendMessage sends a basic text
 func sendMessage(numberTo, message string) {
+	fmt.Printf("Sending message to %s, '%s'\n", numberTo, message)
 	msg := twirest.SendMessage{
 		Text: message,
 		From: twiloNum,
@@ -63,6 +65,7 @@ func sendMessage(numberTo, message string) {
 
 // sendResponse Sends a response from the twilo number associated with the account
 func sendResponse(numberTo, message string, w http.ResponseWriter) {
+	fmt.Printf("Sending response to %s, '%s'\n", numberTo, message)
 	resp := twiml.NewResponse()
 	resp.Action(twiml.Message{
 		Body: message,
