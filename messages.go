@@ -3,11 +3,11 @@ package main
 // Contains all the code relating to twilo sms sending
 
 import (
-	"bytes"
 	"errors"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"bitbucket.org/ckvist/twilio/twiml"
@@ -31,8 +31,8 @@ const (
 		Set timer: time over : 15/0/0 
 		Get reminders
 
-		formating for timed reminder = second/minutes/hour
-		formating for reminder time = second/minute/hour/day/year`
+		formating for timed reminder = second/minutes/hour/day
+		formating for reminder time = second/minute/hour/day`
 )
 
 // sendHelp responds to a message send to the twilo service, which is tied to the dev API number
@@ -72,26 +72,43 @@ func sendResponse(numberTo, message string, w http.ResponseWriter) {
 	resp.Send(w)
 }
 
-// parseMessage takes in a sms, and returns the message, and time formatted for use with cron package
-func parseMessage(sms string) (message, time string, err error) {
+// parseMessage takes in a sms, and returns the message, and time in seconds
+func parseMessage(sms string) (message string, secs int, err error) {
 	params := strings.Split(sms, ":")
 	if len(params) != 3 {
-		return "", "", errors.New("Invalid formatting")
+		return "", 0, errors.New("Invalid formatting")
 	}
 
 	// format of time msg second/minute/hour/day/year
 	times := strings.Split(params[2], "/")
-
-	// There are 6 mandatory fields for the Cron job library param
-	var buffer bytes.Buffer
-	for i := 0; i < 6; i++ {
-		if i < len(times)-1 {
-			buffer.WriteString(strings.TrimSpace(times[i]))
-			buffer.WriteString(" ")
-		} else {
-			buffer.WriteString("* ")
+	for i := 0; i < len(times) || i > 3; i++ {
+		switch i {
+		case 0:
+			s, err := strconv.Atoi(times[i])
+			if err != nil {
+				panic(err)
+			}
+			secs += s
+		case 1:
+			s, err := strconv.Atoi(times[i])
+			if err != nil {
+				panic(err)
+			}
+			secs += 60 * s
+		case 2:
+			s, err := strconv.Atoi(times[i])
+			if err != nil {
+				panic(err)
+			}
+			secs += 24 * 60 * s
+		case 3:
+			s, err := strconv.Atoi(times[i])
+			if err != nil {
+				panic(err)
+			}
+			secs += 7 * 24 * 60 * s
 		}
 	}
 
-	return params[1], buffer.String(), nil
+	return params[1], secs, nil
 }

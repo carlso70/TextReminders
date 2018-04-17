@@ -5,10 +5,14 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/robfig/cron"
+	"github.com/rakanalh/scheduler"
+	"github.com/rakanalh/scheduler/storage"
 )
+
+var sched scheduler.Scheduler
 
 // smsRecieve handlers listens to incoming sms messages from the twilo service
 func smsRecieve(w http.ResponseWriter, r *http.Request) {
@@ -35,19 +39,31 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 }
 
 // addReminder creates a cron job to send a text
-func addReminder(number, message, time string) {
-	c := cron.New()
-
-	c.AddFunc(time, func() {
-		fmt.Printf("time for cron: %s\n", time)
-		sendMessage(number, message)
-	})
-	c.Start()
+func addReminder(number, message string, seconds int) {
+	if _, err := sched.RunAfter(time.Duration(seconds)*time.Second, sendMessage, message, number); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/sms/recieve", smsRecieve)
+
+	// Setup storage for scheduler
+	storage := storage.NewSqlite3Storage(
+		storage.Sqlite3Config{
+			DbName: "task_store.db",
+		},
+	)
+	if err := storage.Connect(); err != nil {
+		log.Fatal("Could not connect to db", err)
+	}
+
+	if err := storage.Initialize(); err != nil {
+		log.Fatal("Could not intialize database", err)
+	}
+
+	sched = scheduler.New(storage)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
