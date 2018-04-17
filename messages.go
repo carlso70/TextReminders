@@ -48,7 +48,7 @@ func sendHelp(numberTo string, w http.ResponseWriter) {
 	resp.Send(w)
 }
 
-// sendMessage sends a basic text
+// SendMessage sends a basic text
 func sendMessage(numberTo, message string) {
 	fmt.Printf("Sending message to %s, '%s'\n", numberTo, message)
 	msg := twirest.SendMessage{

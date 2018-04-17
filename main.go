@@ -8,11 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/rakanalh/scheduler"
-	"github.com/rakanalh/scheduler/storage"
 )
-
-var sched scheduler.Scheduler
 
 // smsRecieve handlers listens to incoming sms messages from the twilio service
 func smsRecieve(w http.ResponseWriter, r *http.Request) {
@@ -48,33 +44,23 @@ func fallback(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Twilio Error code %s: %s\n", errCode, errURL)
 }
 
-// addReminder creates a cron job to send a text
-func addReminder(number, message string, time time.Duration) {
-	if _, err := sched.RunAfter(time, sendMessage, message, number); err != nil {
-		log.Fatal(err)
-	}
+// addReminder runs a ticker that sends a sms at the end
+func addReminder(number, message string, length time.Duration) {
+	ticker := time.NewTicker(length)
+	go func(ticker *time.Ticker) {
+		for {
+			select {
+			case <-ticker.C:
+				sendMessage(number, message)
+			}
+		}
+	}(ticker)
 }
 
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/sms/recieve", smsRecieve)
 	r.HandleFunc("/sms/fallback", fallback)
-
-	// Setup storage for scheduler
-	storage := storage.NewSqlite3Storage(
-		storage.Sqlite3Config{
-			DbName: "task_store.db",
-		},
-	)
-	if err := storage.Connect(); err != nil {
-		log.Fatal("Could not connect to db", err)
-	}
-
-	if err := storage.Initialize(); err != nil {
-		log.Fatal("Could not intialize database", err)
-	}
-
-	sched = scheduler.New(storage)
 
 	fmt.Println("Running server...")
 	log.Fatal(http.ListenAndServe(":8080", r))
