@@ -89,28 +89,28 @@ func parseMessage(sms string) (message string, secs time.Duration, err error) {
 		switch i {
 		case 0:
 			// Seconds
-			s, err := strconv.Atoi(times[i])
+			s, err := strconv.Atoi(strings.TrimSpace(times[i]))
 			if err != nil {
 				panic(err)
 			}
 			secs += time.Duration(s) * time.Second
 		case 1:
 			// Minutes
-			s, err := strconv.Atoi(times[i])
+			s, err := strconv.Atoi(strings.TrimSpace(times[i]))
 			if err != nil {
 				panic(err)
 			}
 			secs += time.Duration(s) * time.Minute
 		case 2:
 			// Hours
-			s, err := strconv.Atoi(times[i])
+			s, err := strconv.Atoi(strings.TrimSpace(times[i]))
 			if err != nil {
 				panic(err)
 			}
 			secs += time.Duration(s) * time.Hour
 		case 3:
 			// Days
-			s, err := strconv.Atoi(times[i])
+			s, err := strconv.Atoi(strings.TrimSpace(times[i]))
 			if err != nil {
 				panic(err)
 			}
