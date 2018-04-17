@@ -19,6 +19,8 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 	sender := r.FormValue("From")
 	body := r.FormValue("Body")
 
+	fmt.Printf("Recieved message from %s, '%s'\n", sender, body)
+
 	// Parse message
 	msg, time, err := parseMessage(body)
 	if err != nil {
@@ -65,5 +67,6 @@ func main() {
 
 	sched = scheduler.New(storage)
 
+	fmt.Println("Running server...")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
