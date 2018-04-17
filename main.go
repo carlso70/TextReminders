@@ -30,16 +30,6 @@ func sendMessage(number_to, message string) {
 		To:   number_to,
 	}
 
-	twilioClient.Request(msg)
-}
-
-func sendMessage(number_to, message string) {
-	msg := twirest.SendMessage{
-		Text: "Hello from App Engine!",
-		From: twilioNumber,
-		To:   to,
-	}
-
 	_, err := twilioClient.Request(msg)
 	if err != nil {
 		fmt.Errorf("Error sending sms text: %v", err)
@@ -51,9 +41,9 @@ func sendMessage(number_to, message string) {
 func sendResponse(number_to, message string, w http.ResponseWriter) {
 	resp := twiml.NewResponse()
 	resp.Action(twiml.Message{
-		Body: fmt.Sprintf("Hello, %s, you said: %s", sender, body),
+		Body: message,
 		From: TWILO_NUM,
-		To:   sender,
+		To:   number_to,
 	})
 	resp.Send(w)
 }
@@ -65,20 +55,18 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Recieved message from %s: %s", sender, body)
 
-	switch body {
-	case strings.Contains(body, "set reminder:"):
+	if strings.Contains(body, "set reminder:") {
 		sendResponse(sender, "Setting reminder for: TBD", w)
 		addReminder(sender, body)
-	case strings.Contains(body, "get reminders"):
+	} else if strings.Contains(body, "get reminders") {
 		sendResponse(sender, "Here are your reminders:", w)
-	default:
-		sendResponse(sender, "INVALID text")
+	} else {
+		sendResponse(sender, "INVALID text", w)
 	}
-
 }
 
 // addReminder creates a cron job to send a text
-func addReminder(number, message) {
+func addReminder(number, message string) {
 	c := cron.New()
 
 	c.AddFunc("10 * * * * *", func() {
