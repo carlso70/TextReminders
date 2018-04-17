@@ -5,7 +5,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
