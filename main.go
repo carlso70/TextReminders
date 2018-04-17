@@ -52,6 +52,7 @@ func addReminder(number, message string, length time.Duration) {
 			select {
 			case <-ticker.C:
 				sendMessage(number, message)
+				ticker.Stop()
 			}
 		}
 	}(ticker)
