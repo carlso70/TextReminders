@@ -1,7 +1,6 @@
 package main
 
 import (
-	"cron"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"bitbucket.org/ckvist/twilio/twiml"
 	"bitbucket.org/ckvist/twilio/twirest"
 	"github.com/gorilla/mux"
+	"github.com/robfig/cron"
 )
 
 var (
@@ -31,6 +31,20 @@ func sendMessage(number_to, message string) {
 	}
 
 	twilioClient.Request(msg)
+}
+
+func sendMessage(number_to, message string) {
+	msg := twirest.SendMessage{
+		Text: "Hello from App Engine!",
+		From: twilioNumber,
+		To:   to,
+	}
+
+	_, err := twilioClient.Request(msg)
+	if err != nil {
+		fmt.Errorf("Error sending sms text: %v", err)
+	}
+
 }
 
 // sendResponse Sends a response from the twilo number associated with the account
@@ -54,6 +68,7 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 	switch body {
 	case strings.Contains(body, "set reminder:"):
 		sendResponse(sender, "Setting reminder for: TBD", w)
+		addReminder(sender, body)
 	case strings.Contains(body, "get reminders"):
 		sendResponse(sender, "Here are your reminders:", w)
 	default:
@@ -63,8 +78,14 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 }
 
 // addReminder creates a cron job to send a text
-func addReminder() {
+func addReminder(number, message) {
+	c := cron.New()
 
+	c.AddFunc("10 * * * * *", func() {
+		fmt.Println("Every 10 seconds, sending text")
+		sendMessage(number, message)
+	})
+	c.Start()
 }
 
 func main() {
