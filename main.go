@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cron"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,10 +33,8 @@ func sendMessage(number_to, message string) {
 	twilioClient.Request(msg)
 }
 
-func smsRecieve(w http.ResponseWriter, r *http.Request) {
-	sender := r.FormValue("From")
-	body := r.FormValue("Body")
-
+// sendResponse Sends a response from the twilo number associated with the account
+func sendResponse(number_to, message string, w http.ResponseWriter) {
 	resp := twiml.NewResponse()
 	resp.Action(twiml.Message{
 		Body: fmt.Sprintf("Hello, %s, you said: %s", sender, body),
@@ -45,14 +44,32 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 	resp.Send(w)
 }
 
-func test(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello there human!")
+// smsRecieve handlers listens to incoming sms messages from the twilo service
+func smsRecieve(w http.ResponseWriter, r *http.Request) {
+	sender := r.FormValue("From")
+	body := r.FormValue("Body")
+
+	fmt.Println("Recieved message from %s: %s", sender, body)
+
+	switch body {
+	case strings.Contains(body, "set reminder:"):
+		sendResponse(sender, "Setting reminder for: TBD", w)
+	case strings.Contains(body, "get reminders"):
+		sendResponse(sender, "Here are your reminders:", w)
+	default:
+		sendResponse(sender, "INVALID text")
+	}
+
+}
+
+// addReminder creates a cron job to send a text
+func addReminder() {
+
 }
 
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/sms/recieve", smsRecieve)
-	r.HandleFunc("/", test)
 
-	log.Fatal(http.ListenAndServe(":80", r))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
