@@ -35,7 +35,7 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 			msg += v
 			msg += "\n"
 		}
-		sendResponse(sender, msg, w)
+		sendMessage(sender, msg)
 	} else {
 		sendHelp(sender, w)
 	}
