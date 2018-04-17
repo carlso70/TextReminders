@@ -3,9 +3,13 @@ package main
 // Contains all the code relating to twilo sms sending
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"bitbucket.org/ckvist/twilio/twiml"
 	"bitbucket.org/ckvist/twilio/twirest"
@@ -67,4 +71,28 @@ func sendResponse(numberTo, message string, w http.ResponseWriter) {
 		To:   numberTo,
 	})
 	resp.Send(w)
+}
+
+// parseMessage takes in a sms, and returns the message, and time formatted for use with cron package
+func parseMessage(sms string) (message, time string, err error) {
+	params := strings.Split(sms, ":")
+	if len(params) != 3 {
+		return "", "", errors.New("Invalid formatting")
+	}
+
+	// format of time msg second/minute/hour/day/year
+	times := strings.Split(params[2], "/")
+
+	// There are 6 mandatory fields for the Cron job library param
+	var buffer bytes.Buffer
+	for i := 0; i < 6; i++ {
+		if i < len(times)-1 {
+			buffer.WriteString(strings.TrimSpace(times[i]))
+			buffer.WriteString(" ")
+		} else {
+			buffer.WriteString("* ")
+		}
+	}
+
+	return params[1], buffer.String(), nil
 }

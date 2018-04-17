@@ -39,7 +39,7 @@ func addReminder(number, message, time string) {
 	c := cron.New()
 
 	c.AddFunc(time, func() {
-		fmt.Println("Every 10 seconds, sending text")
+		fmt.Printf("time for cron: %s\n", time)
 		sendMessage(number, message)
 	})
 	c.Start()
