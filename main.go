@@ -43,14 +43,14 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 // fallback handler for when there is an error from twilio sms service
 func fallback(w http.ResponseWriter, r *http.Request) {
 	errCode := r.FormValue("ErrorCode")
-	errUrl := r.FormValue("ErrorUrl")
+	errURL := r.FormValue("ErrorUrl")
 
-	fmt.Printf("Twilio Error code %s: %s\n", errCode, errUrl)
+	fmt.Printf("Twilio Error code %s: %s\n", errCode, errURL)
 }
 
 // addReminder creates a cron job to send a text
-func addReminder(number, message string, seconds int) {
-	if _, err := sched.RunAfter(time.Duration(seconds)*time.Second, sendMessage, message, number); err != nil {
+func addReminder(number, message string, time time.Duration) {
+	if _, err := sched.RunAfter(time, sendMessage, message, number); err != nil {
 		log.Fatal(err)
 	}
 }

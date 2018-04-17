@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"bitbucket.org/ckvist/twilio/twiml"
 	"bitbucket.org/ckvist/twilio/twirest"
@@ -76,7 +77,7 @@ func sendResponse(numberTo, message string, w http.ResponseWriter) {
 }
 
 // parseMessage takes in a sms, and returns the message, and time in seconds
-func parseMessage(sms string) (message string, secs int, err error) {
+func parseMessage(sms string) (message string, secs time.Duration, err error) {
 	params := strings.Split(sms, ":")
 	if len(params) != 3 {
 		return "", 0, errors.New("Invalid formatting")
@@ -87,29 +88,33 @@ func parseMessage(sms string) (message string, secs int, err error) {
 	for i := 0; i < len(times) || i > 3; i++ {
 		switch i {
 		case 0:
+			// Seconds
 			s, err := strconv.Atoi(times[i])
 			if err != nil {
 				panic(err)
 			}
-			secs += s
+			secs += time.Duration(s) * time.Second
 		case 1:
+			// Minutes
 			s, err := strconv.Atoi(times[i])
 			if err != nil {
 				panic(err)
 			}
-			secs += 60 * s
+			secs += time.Duration(s) * time.Minute
 		case 2:
+			// Hours
 			s, err := strconv.Atoi(times[i])
 			if err != nil {
 				panic(err)
 			}
-			secs += 24 * 60 * s
+			secs += time.Duration(s) * time.Hour
 		case 3:
+			// Days
 			s, err := strconv.Atoi(times[i])
 			if err != nil {
 				panic(err)
 			}
-			secs += 7 * 24 * 60 * s
+			secs += time.Duration(s*24) * time.Hour
 		}
 	}
 
