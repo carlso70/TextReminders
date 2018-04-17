@@ -17,10 +17,11 @@ import (
 )
 
 var (
-	twiloKey     = os.Getenv("TWILO_KEY")
-	twiloAccount = os.Getenv("TWILO_ACCOUNT")
-	twiloNum     = os.Getenv("TWILO_NUM")
-	twilioClient = twirest.NewClient(
+	activeReminders = make(map[string][]string)
+	twiloKey        = os.Getenv("TWILO_KEY")
+	twiloAccount    = os.Getenv("TWILO_ACCOUNT")
+	twiloNum        = os.Getenv("TWILO_NUM")
+	twilioClient    = twirest.NewClient(
 		twiloAccount,
 		twiloKey)
 )

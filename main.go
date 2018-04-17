@@ -30,7 +30,12 @@ func smsRecieve(w http.ResponseWriter, r *http.Request) {
 		sendResponse(sender, fmt.Sprintf("Setting timer for: %s", msg), w)
 		addReminder(sender, msg, time)
 	} else if strings.Contains(body, "Get reminders") {
-		sendResponse(sender, "Here are your reminders:", w)
+		msg = "Here are you reminders:\n"
+		for _, v := range activeReminders[sender] {
+			msg += v
+			msg += "\n"
+		}
+		sendResponse(sender, msg, w)
 	} else {
 		sendHelp(sender, w)
 	}
@@ -46,16 +51,29 @@ func fallback(w http.ResponseWriter, r *http.Request) {
 
 // addReminder runs a ticker that sends a sms at the end
 func addReminder(number, message string, length time.Duration) {
+	activeReminders[number] = append(activeReminders[number], message)
+
 	ticker := time.NewTicker(length)
 	go func(ticker *time.Ticker) {
 		for {
 			select {
 			case <-ticker.C:
 				sendMessage(number, message)
+				activeReminders[number] = removeString(activeReminders[number], message)
 				ticker.Stop()
 			}
 		}
 	}(ticker)
+}
+
+// removeString removes an item from an array of strings
+func removeString(s []string, r string) []string {
+	for i, v := range s {
+		if v == r {
+			return append(s[:i], s[i+1:]...)
+		}
+	}
+	return s
 }
 
 func main() {
